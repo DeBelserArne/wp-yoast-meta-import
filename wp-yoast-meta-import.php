@@ -134,13 +134,9 @@ function ymi_render_admin_page()
                                     ?></th>
                                 <th><?php _e('URL', 'yoast-meta-import');
                                     ?></th>
-                                <th><?php _e('Current Title', 'yoast-meta-import');
+                                <th><?php _e('SEO Title', 'yoast-meta-import');
                                     ?></th>
-                                <th><?php _e('New Title', 'yoast-meta-import');
-                                    ?></th>
-                                <th><?php _e('Current Description', 'yoast-meta-import');
-                                    ?></th>
-                                <th><?php _e('New Description', 'yoast-meta-import');
+                                <th><?php _e('Meta Description', 'yoast-meta-import');
                                     ?></th>
                             </tr>
                         </thead>
@@ -381,8 +377,10 @@ function ymi_render_admin_page()
 
         function ymi_resolve_url($url, $site_url)
         {
-            $path = str_replace($site_url, '', $url);
-            $path = '/' . trim($path, '/');
+            // Extract only the path from the URL — works regardless of domain
+            // (e.g. https://climatoni.be/realisaties/ → /realisaties/)
+            $parsed = parse_url($url);
+            $path   = isset($parsed['path']) ? '/' . trim($parsed['path'], '/') : '/';
 
             // --- Home page ---
             if ($path === '/' || $path === '') {

@@ -84,6 +84,65 @@
     font-style: italic;
 }
 
+/* Git-diff style cells */
+.ymi-diff-cell {
+    line-height: 1.6;
+}
+
+.ymi-diff-unchanged {
+    color: #333;
+    word-break: break-word;
+}
+
+.ymi-diff-old {
+    background: #ffeef0;
+    color: #cb2431;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: block;
+    margin-bottom: 3px;
+    word-break: break-word;
+}
+
+.ymi-diff-old::before {
+    content: '\2212 ';
+    font-weight: 700;
+}
+
+.ymi-diff-new {
+    background: #e6ffed;
+    color: #22863a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: block;
+    word-break: break-word;
+}
+
+.ymi-diff-new::before {
+    content: '+ ';
+    font-weight: 700;
+}
+
+.ymi-diff-only-new {
+    background: #e6ffed;
+    color: #22863a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: block;
+    word-break: break-word;
+}
+
+.ymi-diff-only-new::before {
+    content: '+ ';
+    font-weight: 700;
+}
+
+.ymi-diff-empty {
+    color: #ccc;
+    font-style: italic;
+    display: block;
+}
+
 /* Status badges */
 .ymi-badge {
     display: inline-block;
