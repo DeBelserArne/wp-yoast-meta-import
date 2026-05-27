@@ -1,0 +1,155 @@
+/* ============================================================
+   Yoast SEO Meta Importer — Admin Styles
+   ============================================================ */
+
+.ymi-wrap {
+    max-width: 1200px;
+}
+
+.ymi-intro {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+/* Cards */
+.ymi-card {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    padding: 24px 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.ymi-card h2 {
+    margin-top: 0;
+    font-size: 18px;
+}
+
+/* Mapping */
+#ymi-mapping-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e5e5;
+}
+
+#ymi-mapping-section h3 {
+    margin-top: 0;
+}
+
+#ymi-mapping-table select {
+    min-width: 220px;
+}
+
+/* Preview Table */
+#ymi-preview-wrapper {
+    max-height: 550px;
+    overflow-y: auto;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+}
+
+#ymi-preview-table {
+    border: none;
+    margin: 0;
+}
+
+#ymi-preview-table th {
+    position: sticky;
+    top: 0;
+    background: #f0f0f1;
+    z-index: 2;
+    white-space: nowrap;
+}
+
+#ymi-preview-table td {
+    vertical-align: top;
+    max-width: 250px;
+    word-break: break-word;
+}
+
+.ymi-cell-current {
+    color: #999;
+    font-size: 12px;
+}
+
+.ymi-cell-new {
+    color: #2271b1;
+    font-weight: 500;
+}
+
+.ymi-cell-empty {
+    color: #ccc;
+    font-style: italic;
+}
+
+/* Status badges */
+.ymi-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.6;
+}
+
+.ymi-badge-found {
+    background: #d4edda;
+    color: #155724;
+}
+
+.ymi-badge-notfound {
+    background: #fce8e6;
+    color: #c5221f;
+}
+
+/* Stats bar */
+#ymi-preview-stats {
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: #f0f6fc;
+    border-left: 4px solid #2271b1;
+    font-size: 13px;
+    border-radius: 3px;
+}
+
+#ymi-preview-stats .ymi-stat {
+    margin-right: 18px;
+    white-space: nowrap;
+}
+
+#ymi-preview-stats .ymi-stat strong {
+    font-size: 15px;
+}
+
+/* Import results */
+#ymi-import-results {
+    margin-top: 15px;
+    padding: 14px 18px;
+    border-radius: 4px;
+}
+
+.ymi-results-success {
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.ymi-results-error {
+    background: #fce8e6;
+    border: 1px solid #f5c6cb;
+    color: #c5221f;
+}
+
+/* Spinner */
+.ymi-wrap .spinner {
+    float: none;
+    margin: -4px 0 0 10px;
+    vertical-align: middle;
+}
+
+/* Back button */
+#ymi-btn-back {
+    margin-left: 8px;
+}
