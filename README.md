@@ -11,6 +11,7 @@ A WordPress plugin that lets you bulk-import Yoast SEO titles and meta descripti
 - **Safe & non-destructive** — writes to the correct Yoast storage for each entity type (post meta, `wpseo_titles` option, term meta)
 - **Zero external dependencies** — uses PHP's built-in `ZipArchive` + `SimpleXML` to read Excel files
 - **URL resolution** — supports pages, posts, the home page, custom post type archives, and taxonomy term archives
+- **Multilingual** — works with WPML and Polylang: auto-detect language from URL paths or pick a language per file
 
 ## Requirements
 
@@ -65,6 +66,55 @@ The plugin resolves URLs to different WordPress entities and writes Yoast SEO da
 
 The preview will show the detected entity type as a badge next to each row (e.g. `page`, `home`, `projecten` for a CPT archive).
 
+## Multilingual Sites (WPML / Polylang)
+
+The plugin auto-detects WPML or Polylang and adds language awareness.
+
+### Two modes
+
+**Mode 1 — Auto-detect from URL** (zero setup, the default)
+
+The plugin inspects the URL path. If your site uses directory-based language URLs:
+
+| URL                             | Detected language | Resolves to                  |
+| ------------------------------- | ----------------- | ---------------------------- |
+| `https://example.com/nl/about/` | `nl`              | Dutch version of `/about/`   |
+| `https://example.com/en/about/` | `en`              | English version of `/about/` |
+| `https://example.com/about/`    | default lang      | Primary language version     |
+
+The language prefix is stripped before resolving the page, then the resolved post/term ID is translated to the correct language variant. Works for mixed-language XLSX files — each row can target a different language based on its URL.
+
+**Mode 2 — One XLSX per language**
+
+When WPML or Polylang is active, a **Language dropdown** appears in Step 1. Pick one language (e.g. "Nederlands (nl)") and every row in that file is imported for that language. Ideal when you maintain separate spreadsheets per language with the same URL structure.
+
+If the dropdown is left at "Auto-detect from URLs", Mode 1 kicks in.
+
+### XLSX format with languages
+
+The XLSX format does **not** require a language column. The same 3-column format works for both modes:
+
+| URL | Meta Title | Meta Description |
+| --- | ---------- | ---------------- |
+
+Language comes from one of:
+
+- The URL path (`/nl/slug/`, `/en/slug/`, etc.) in auto-detect mode
+- The **Language dropdown** you pick in Step 1 (one language per file)
+
+In the preview, each row shows a colored language badge (e.g. `NL`, `EN`) next to the entity badge.
+
+### Where language-specific data is written
+
+| Entity type       | Multilingual storage                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| Page / Post       | Language-specific post meta (WPML/Polylang translations each have their own post ID) |
+| Home page         | Language-specific front page post meta                                               |
+| Post type archive | `wpseo_titles` option key for that language + post type                              |
+| Taxonomy term     | Language-specific term meta                                                          |
+
+When no multilingual plugin is active, the language logic is a no-op — everything works exactly as before.
+
 ## How It Works
 
 ```mermaid
@@ -72,18 +122,21 @@ flowchart TD
     A[Upload .xlsx] --> B[Parse headers & data rows]
     B --> C[Auto-map columns by name]
     C --> D[User confirms / adjusts mapping]
-    D --> E[Resolve each URL to an entity]
+    D --> D2{Multilingual active?}
+    D2 -->|yes| D3[User picks language or auto-detect]
+    D2 -->|no| E
+    D3 --> E[Resolve each URL + detect language]
     E --> F{Entity type?}
-    F -->|page / post| G[Read post meta]
-    F -->|home page| H[Read wpseo_titles option]
+    F -->|page / post| G[Translate post ID, read post meta]
+    F -->|home page| H[Translate home page, read wpseo_titles]
     F -->|post type archive| I[Read wpseo_titles option]
-    F -->|taxonomy archive| J[Read term meta]
-    G --> K[Show preview table]
+    F -->|taxonomy archive| J[Translate term, read term meta]
+    G --> K[Show preview table with lang badges]
     H --> K
     I --> K
     J --> K
     K --> L[User selects rows → import]
-    L --> M[Write to correct Yoast storage]
+    L --> M[Write to language-specific Yoast storage]
 ```
 
 - Parsed data is stored in WordPress transients (expires after 1 hour)
@@ -96,6 +149,7 @@ flowchart TD
 wp-yoast-meta-import/
 ├── wp-yoast-meta-import.php   # Main plugin file
 ├── lib/
+│   ├── Multilingual.php       # WPML/Polylang abstraction layer
 │   └── SimpleXLSX.php         # Bundled XLSX reader
 ├── assets/
 │   ├── css/

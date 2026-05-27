@@ -163,6 +163,28 @@
     color: #c5221f;
 }
 
+.ymi-badge-lang {
+    background: #e8f0fe;
+    color: #1967d2;
+}
+
+/* Language picker */
+.ymi-lang-picker {
+    display: none;
+    margin-top: 16px;
+    padding: 14px 0;
+    border-top: 1px solid #e5e5e5;
+}
+
+.ymi-lang-picker select {
+    margin-left: 10px;
+    min-width: 200px;
+}
+
+.ymi-lang-picker .description {
+    margin-top: 6px;
+}
+
 /* Stats bar */
 #ymi-preview-stats {
     margin-bottom: 12px;

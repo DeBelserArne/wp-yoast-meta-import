@@ -20,6 +20,8 @@ define('YMI_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 // --- Load the bundled XLSX reader ---
 require_once YMI_PLUGIN_DIR . 'lib/SimpleXLSX.php';
+// --- Load multilingual abstraction ---
+require_once YMI_PLUGIN_DIR . 'lib/Multilingual.php';
 
 // ============================================================
 // 1. ADMIN MENU & PAGE
@@ -84,6 +86,18 @@ function ymi_render_admin_page()
                             </td>
                         </tr>
                     </table>
+                    <?php if (ymi_ml_is_active()): ?>
+                        <div id="ymi-lang-picker" class="ymi-lang-picker">
+                            <label for="ymi-lang"><strong><?php _e('Language', 'yoast-meta-import'); ?></strong></label>
+                            <select id="ymi-lang">
+                                <option value=""><?php _e('Auto-detect from URLs', 'yoast-meta-import'); ?></option>
+                                <?php foreach (ymi_ml_get_languages() as $code => $name): ?>
+                                    <option value="<?php echo esc_attr($code); ?>"><?php echo esc_html($name . ' (' . $code . ')'); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <p class="description"><?php _e('Choose one language for this entire file, or leave blank to auto-detect from URL paths.', 'yoast-meta-import'); ?></p>
+                        </div>
+                    <?php endif; ?>
                     <div id="ymi-mapping-section" style="display:none;">
                         <h3><?php _e('Column Mapping', 'yoast-meta-import');
                             ?></h3>
@@ -210,6 +224,7 @@ function ymi_render_admin_page()
                 'headers' => $headers,
                 'row_count' => count($data_rows),
                 'transient_key' => $transient_key,
+                'ml_active' => ymi_ml_is_active(),
             ]);
         }
 
@@ -230,6 +245,7 @@ function ymi_render_admin_page()
             $map_url = sanitize_text_field($_POST['map_url'] ?? '');
             $map_title = sanitize_text_field($_POST['map_title'] ?? '');
             $map_desc = sanitize_text_field($_POST['map_desc'] ?? '');
+            $global_lang = sanitize_text_field($_POST['lang'] ?? '');
 
             if (empty($map_url) || empty($map_title) || empty($map_desc)) {
                 wp_send_json_error(['message' => 'All column mappings are required.']);
@@ -266,8 +282,14 @@ function ymi_render_admin_page()
                     continue;
                 }
 
+                // Determine language: global dropdown > auto-detect from URL > default
+                $lang = $global_lang ?: ymi_ml_detect_lang_from_url($raw_url);
+                if (empty($lang)) {
+                    $lang = ymi_ml_default_lang();
+                }
+
                 // Resolve URL to a WordPress entity (post, home, archive, etc.)
-                $entity = ymi_resolve_url($raw_url, $site_url);
+                $entity = ymi_resolve_url($raw_url, $site_url, $lang);
                 $current = ymi_get_yoast_values($entity);
 
                 $entry = [
@@ -277,6 +299,7 @@ function ymi_render_admin_page()
                     'entity_label'   => $entity['label'] ?: $raw_url,
                     'post_type'      => $entity['post_type'] ?? '',
                     'taxonomy'       => $entity['taxonomy'] ?? '',
+                    'lang'           => $lang,
                     'current_title'  => $current['title'],
                     'current_desc'   => $current['desc'],
                     'new_title'      => $new_title,
@@ -352,6 +375,7 @@ function ymi_render_admin_page()
                     'id'          => $entry['entity_id'],
                     'post_type'   => $entry['post_type'] ?? '',
                     'taxonomy'    => $entry['taxonomy'] ?? '',
+                    'lang'        => $entry['lang'] ?? '',
                 ];
                 ymi_set_yoast_values($entity, $entry['new_title'], $entry['new_desc']);
 
@@ -375,8 +399,13 @@ function ymi_render_admin_page()
         //           'id' => post_id|term_id,  'label' => human label,
         //           'post_type'/'taxonomy' => string,  'slug' => string ]
 
-        function ymi_resolve_url($url, $site_url)
+        function ymi_resolve_url($url, $site_url, $lang = '')
         {
+            // Strip language prefix from URL before resolving
+            if (!empty($lang)) {
+                $url = ymi_ml_strip_lang_prefix($url, $lang);
+            }
+
             // Extract only the path from the URL — works regardless of domain
             // (e.g. https://climatoni.be/realisaties/ → /realisaties/)
             $parsed = parse_url($url);
@@ -384,7 +413,7 @@ function ymi_render_admin_page()
 
             // --- Home page ---
             if ($path === '/' || $path === '') {
-                $front_page_id = get_option('page_on_front');
+                $front_page_id = ymi_ml_get_home_page_id($lang);
                 if ($front_page_id) {
                     $post = get_post($front_page_id);
                     return [
@@ -425,6 +454,8 @@ function ymi_render_admin_page()
             }
 
             if ($post_id) {
+                // Translate the post to the target language
+                $post_id = ymi_ml_get_translated_post($post_id, $lang);
                 $post = get_post($post_id);
                 return [
                     'entity_type' => 'post',
@@ -471,13 +502,18 @@ function ymi_render_admin_page()
                     $term_slug = substr($slug, strlen($tax_slug) + 1);
                     $term = get_term_by('slug', $term_slug, $tax->name);
                     if ($term && !is_wp_error($term)) {
-                        return [
-                            'entity_type' => 'taxonomy',
-                            'id'          => $term->term_id,
-                            'label'       => $term->name,
-                            'taxonomy'    => $tax->name,
-                            'slug'        => $slug,
-                        ];
+                        // Translate the term to the target language
+                        $term_id = ymi_ml_get_translated_term($term->term_id, $tax->name, $lang);
+                        $term = get_term($term_id, $tax->name);
+                        if ($term && !is_wp_error($term)) {
+                            return [
+                                'entity_type' => 'taxonomy',
+                                'id'          => $term->term_id,
+                                'label'       => $term->name,
+                                'taxonomy'    => $tax->name,
+                                'slug'        => $slug,
+                            ];
+                        }
                     }
                 }
             }
